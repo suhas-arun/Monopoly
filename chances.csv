@@ -1,0 +1,15 @@
+Advance to "Go",move,0
+Go back to Old Kent Road,move,1
+Go to jail. Move directly to jail. Do not pass "Go". Do not collect £200,move,10
+Pay hospital £100,pay,100
+Doctor's fee. Pay £50,pay,50
+Pay your insurance premium £50,pay,50
+Bank error in your favour. Collect £200,get,200
+Annuity matures. Collect £100,get,100
+You inherit £100,get,100
+From sale of stock you get £50,get,50
+Receive interest on 7% preference shares: £25,get,25
+Income tax refund. Collect £20,get,20
+You have won second prize in a beauty contest. Collect £10,get,10
+It is your birthday. Collect £10 from each player,transfer,10
+Pay a £10 fine,pay,10
