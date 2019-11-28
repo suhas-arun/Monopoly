@@ -1,4 +1,4 @@
-# work on jail, houses, ending the game
+# work on ending the game
 
 import tkinter
 import Place

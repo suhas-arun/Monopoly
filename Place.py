@@ -9,7 +9,7 @@ class Place:
         self.type = typeOfPlace
         self.info = info
         self.coords = coords
-        self.owner = 0
+        self.owner = None
 
     def getInfo(self):
         return (self.type, self.info, self.owner)
@@ -21,7 +21,7 @@ class Place:
         return self.info[0]
 
     def getRent(self, dice_total):
-        if self.owner == 0: #if unowned
+        if self.owner is None: #if unowned
             return
 
         if self.type == "station":
@@ -41,25 +41,26 @@ class Place:
             else:
                 return 4 * dice_total
                 
-        if self.type == "property":
-            return Property(self).getRent()
+
 
 
 class Property(Place):
     def __init__(self, Place):
         self.info = Place.info
+        self.owner = Place.owner
+        self.coords = Place.coords
         self.name = self.info[0]
         self.colour = self.info[1]
         self.price = self.info[2]
         self.rent = self.info[3:9]
-        self.costofHouse = self.info[9]
+        self.costOfHouse = int(self.info[9])
         self.isMonopoly = False
         self.noOfHouses = 0
 
     def getRent(self):
         rent = self.rent[self.getNoOfHouses()]
-        if self.isMonopoly:
-            rent *= 2 #rent is doubled if the property is part of a monopoly
+        if self.isMonopoly and self.getNoOfHouses() == 0:
+            rent = rent #rent is doubled if the property is part of a monopoly
         return rent
 
     def getNoOfHouses(self):

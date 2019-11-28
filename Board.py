@@ -29,6 +29,7 @@ class Board:
                            y=player_position_y, anchor="center")
 
     def updatePlayer(self, player):
+        self.currentPlayer = player
         # removes previous player label from the screen (otherwise the player is in multiple places at once)
         player.label.destroy()
         player.label = tkinter.Label(self.parent, width=2, height=1, text=str(
@@ -255,7 +256,15 @@ class Board:
             x=615, y=615, anchor="center")
 
     # updates info box in the middle of the board
-    def updateInfo(self, ignore, place,jail_info=None):
+    def updateInfo(self, ignore, place, jail_info=None):
+        #checks if you can build a house on the current place
+        if place.type == "property":
+            self.current_property = self.getProperty(place.getName())
+            if hasattr(self,"currentPlayer"):
+                if self.currentPlayer == place.owner and self.current_property.isMonopoly and self.current_property.noOfHouses < 5:
+                    self.build_house.config(state="normal")
+                            
+
         place_info = place.getInfo()
         place_type = place_info[0]
         info = place_info[1]
@@ -269,7 +278,7 @@ class Board:
             self.place_name_label.place(x=327.5, y=300, anchor="center")
             price, rent0, rent1, rent2, rent3, rent4, rent5, cost_of_house = info[
                 2], info[3], info[4], info[5], info[6], info[7], info[8], info[9]
-            if owner == 0:
+            if owner is None:
                 self.info_label.config(text="Price: £{0}\nRent: £{1}\n\nWith 1 House: £{2}\nWith 2 Houses: £{3}\nWith 3 Houses: £{4}\nWith 4 Houses: £{5}\nWith Hotel: £{6}\n\nHouses cost £{7} each\nA Hotel costs £{7}".format(
                     price, rent0, rent1, rent2, rent3, rent4, rent5, cost_of_house), font=("Helvetica", 9))
                 self.info_label.place(x=327.5, y=410, anchor="center")
@@ -307,7 +316,7 @@ class Board:
             else:
                 self.info_label.config(text="Just Visiting",font=("Helvetica",12))
 
-        owner = "Unowned" if place.owner == 0 else "Owned by Player " + \
+        owner = "Unowned" if place.owner is None else "Owned by Player " + \
             str(place.owner.number)
         self.owner_label.config(text=owner)
         if place.type in ["property", "utility", "station"]:
@@ -353,7 +362,7 @@ class Board:
                 for prop in props_of_colour:
                     prop.isMonopoly = True
 
-            # only displays the able if the label has text (so that there isn't a grey box where the yellow properties should be)
+            # only displays the label if it has text (so that there isn't a grey box where the yellow properties should be)
             if properties_info.cget("text"):
                 properties_info.place(x=25, y=y_coord)
             y_coord += 20
@@ -412,3 +421,70 @@ class Board:
         self.dice_box.config(bd=5,font=("Helvetica",12,"bold"))
         self.parent.after(1000, lambda: self.dice_box.config(bd=2,font=("Helvetica",12,)))
         
+    def drawHouses(self,prop):
+        noOfHouses = prop.noOfHouses
+        position = self.currentPlayer.position
+
+        #if the property is in the bottom row
+        if position < 10: 
+            x_pos = float(self.current_property.coords[0])
+            self.canvas.create_rectangle(
+                    x_pos - 27.5, 575, x_pos + 27.5, 585, fill=self.current_property.info[1])
+            y = 580
+            if noOfHouses <= 4:
+                x = x_pos - 20
+                for _ in range(noOfHouses):
+                    house = self.canvas.create_rectangle(x-3,y-3,x+3,y+3,fill="green")
+                    # tkinter.Label(text="",bg="green",bd=1,width=0.1,height=0.1)
+                    x += 12
+            else:
+                hotel = self.canvas.create_rectangle(x_pos-4,y-4,x_pos+4,y+4,fill="red")
+
+        
+        #if the property is in the left column
+        elif position < 20:
+            y_pos = float(self.current_property.coords[1])
+            self.canvas.create_rectangle(
+                    70, y_pos - 27.5, 80, y_pos + 27.5, fill=self.current_property.info[1])
+
+            x = 75
+            if noOfHouses <= 4:
+                y = y_pos - 20
+                for _ in range(noOfHouses):
+                    house = self.canvas.create_rectangle(x-3,y-3,x+3,y+3,fill="green")
+                    # tkinter.Label(text="",bg="green",bd=1,width=0.1,height=0.1)
+                    y += 12
+            else:
+                hotel = self.canvas.create_rectangle(x-4,y_pos-4,x+4,y_pos+4,fill="red")
+
+
+        #if the property is in the top row
+        elif position < 30: 
+            x_pos = float(self.current_property.coords[0])
+            self.canvas.create_rectangle(
+                    x_pos - 27.5, 70, x_pos + 27.5, 80, fill=self.current_property.info[1])
+            y = 75                
+            if noOfHouses <= 4:
+                x = x_pos - 20
+                for _ in range(noOfHouses):
+                    house = self.canvas.create_rectangle(x-3,y-3,x+3,y+3,fill="green")
+                    # tkinter.Label(text="",bg="green",bd=1,width=0.1,height=0.1)
+                    x += 12
+            else:
+                hotel = self.canvas.create_rectangle(x_pos-4,y-4,x_pos+4,y+4,fill="red")
+
+        #if the property is on the right column
+        else:
+            y_pos = float(self.current_property.coords[1])
+            self.canvas.create_rectangle(
+                    575, y_pos - 27.5, 585, y_pos + 27.5, fill=self.current_property.info[1])
+
+            x = 580
+            if noOfHouses <= 4:
+                y = y_pos - 20
+                for _ in range(noOfHouses):
+                    house = self.canvas.create_rectangle(x-3,y-3,x+3,y+3,fill="green")
+                    # tkinter.Label(text="",bg="green",bd=1,width=0.1,height=0.1)
+                    y += 12
+            else:
+                hotel = self.canvas.create_rectangle(x-4,y_pos-4,x+4,y_pos+4,fill="red")

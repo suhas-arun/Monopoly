@@ -44,6 +44,7 @@ class Game:
         self.board.displayPlayerOptions(
             self.currentPlayer, self.die1, self.die2, self)  # refresh dice display
         self.board.flashDiceBox()
+
         # prevents the player from rolling again
         self.board.roll_button.config(state="disabled")
         total = self.die1 + self.die2
@@ -80,21 +81,25 @@ class Game:
             self.board.updatePlayer(self.currentPlayer)
             self.popup("go", 200)
 
-        self.board.updatePlayer(self.currentPlayer)
         self.board.displayPlayerInfo(self.currentPlayer)
+        self.board.updatePlayer(self.currentPlayer)
         current_place = self.board.places[self.currentPlayer.position]
 
         if current_place.type in ["property", "utility", "station"]:
             self.board.updateInfo("event", current_place)
-            if current_place.owner == 0:  # if unowned, allow player to buy
+            if current_place.owner is None:  # if unowned, allow player to buy
                 self.board.buy_button.config(state="normal")
 
             elif current_place.owner == self.getOtherPlayer(): #if place is owned by the other player
                 # pay rent
                 self.popup("rent", current_place)
                 otherPlayer = self.getOtherPlayer()
+                if current_place.type == "property":
+                    rent = self.board.getProperty(current_place.getName()).getRent()
+                else:
+                    rent = current_place.getRent(total)
                 self.currentPlayer.payRent(
-                    current_place.getRent(total), otherPlayer)
+                    rent, otherPlayer)
                 # updates the other player's on-screen balance
                 self.board.displayPlayerInfo(self.getOtherPlayer())
 
@@ -139,8 +144,14 @@ class Game:
         self.board.displayPlayerInfo(self.currentPlayer)
 
     def buildHouse(self):
-        return
-        # check if property is part of a monopoly then build house
+        prop = self.board.current_property
+        prop.noOfHouses += 1
+        self.board.drawHouses(prop)
+        if prop.noOfHouses == 5:
+            self.board.build_house.config(state="disabled")
+        self.currentPlayer.balance -= prop.costOfHouse
+        self.board.displayPlayerInfo(self.currentPlayer)
+        
 
     def sellHouse(self):
         return
@@ -192,9 +203,7 @@ class Game:
                 self.board.updatePlayer(self.currentPlayer)
                 self.board.roll_button.config(state="normal")
 
-        self.board.end_turn.config(state="normal")
-            
-            
+        self.board.end_turn.config(state="normal")   
 
     def getOtherPlayer(self):
         if self.currentPlayer.number == 1:
@@ -231,9 +240,15 @@ class Game:
             self.getOtherPlayer().balance -= int(chance[2])
 
     def popup(self, popup_type, info=None):
+        
         if popup_type == "rent":
+            current_place = info
+            if current_place.type == "property":
+                    rent = self.board.getProperty(current_place.getName()).getRent()
+            else:
+                rent = current_place.getRent(self.die1+self.die2)
             tkinter.messagebox.showinfo("Pay Rent!", message="You have landed on {} which is owned by Player {}.\nYou have to pay £{}".format(
-                info.info[0], info.owner.number, info.getRent(self.die1+self.die2)))
+                current_place.info[0], current_place.owner.number, rent))
         
         elif popup_type == "tax":
             tkinter.messagebox.showinfo("Tax", message="Pay £{}".format(info))
