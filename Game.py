@@ -162,7 +162,7 @@ class Game:
         self.board.displayPlayerInfo(self.currentPlayer)
 
     def sellProperty(self):
-        place = self.board.places[self.currentPlayer.position]
+        place = self.board.getPlace(self.board.current_property.getName())
         if place.type == "property":
             prop = self.board.getProperty(place.getName())
             self.currentPlayer.sellProperty(prop)
@@ -186,6 +186,7 @@ class Game:
 
         self.board.sell_property.config(state="disabled")
         self.board.build_house.config(state="disabled")
+        self.board.sell_house.config(state="disabled")
 
     def endTurn(self):
         self.currentPlayer = self.getOtherPlayer()
@@ -299,4 +300,3 @@ class Game:
             tkinter.messagebox.showwarning("Jail",message="Go to Jail!")
             info = (self.currentPlayer.inJail,self.currentPlayer.turnsInJail)
             self.board.updateInfo("event",self.board.getPlace("Jail"),info)
-

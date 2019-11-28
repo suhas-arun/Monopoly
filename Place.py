@@ -55,7 +55,7 @@ class Property(Place):
         self.price = self.info[2]
         self.rent = self.info[3:9]
         self.costOfHouse = int(self.info[9])
-        self.isMonopoly = True
+        self.isMonopoly = False
         self.noOfHouses = 0
 
     def getRent(self):
