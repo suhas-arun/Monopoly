@@ -47,6 +47,7 @@ class Place:
 class Property(Place):
     def __init__(self, Place):
         self.info = Place.info
+        self.type = ""
         self.owner = Place.owner
         self.coords = Place.coords
         self.name = self.info[0]
@@ -54,7 +55,7 @@ class Property(Place):
         self.price = self.info[2]
         self.rent = self.info[3:9]
         self.costOfHouse = int(self.info[9])
-        self.isMonopoly = False
+        self.isMonopoly = True
         self.noOfHouses = 0
 
     def getRent(self):

@@ -31,9 +31,16 @@ class Player:
         self.utilities_owned.append(utility)
         self.balance -= int(utility.info[1])
 
-    def sellProperty(self, property):
-        self.properties_owned.remove(property)
-        self.balance += int(property.price)
-        self.balance += len(property.noOfHouses) * property.costOfHouse
-        property.noOfHouses = 0
-        property.isMonopoly = False
+    def sellProperty(self, prop):
+        self.properties_owned.remove(prop)
+        self.balance += int(prop.price)
+        self.balance += prop.noOfHouses * prop.costOfHouse
+        prop.noOfHouses = 0
+    
+    def sellStation(self, station):
+        self.stations_owned.remove(station)
+        self.balance += int(station.info[1])
+    
+    def sellUtility(self, utility):
+        self.utilities_owned.remove(utility)
+        self.balance += int(utility.info[1])

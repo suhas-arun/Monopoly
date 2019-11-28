@@ -31,9 +31,6 @@ class Game:
 
         self.initialiseChances()
 
-    def Game(self):
-        self.board.roll_button.config(state="normal")
-
     def makeTurn(self):
         if self.currentPlayer.inJail:
             self.Jail()
@@ -86,7 +83,10 @@ class Game:
         current_place = self.board.places[self.currentPlayer.position]
 
         if current_place.type in ["property", "utility", "station"]:
-            self.board.updateInfo("event", current_place)
+            if current_place.type == "property":
+                self.board.updateInfo("event", self.board.getProperty(current_place.getName()))
+            else:
+                self.board.updateInfo("event", current_place)
             if current_place.owner is None:  # if unowned, allow player to buy
                 self.board.buy_button.config(state="normal")
 
@@ -152,12 +152,40 @@ class Game:
         self.currentPlayer.balance -= prop.costOfHouse
         self.board.displayPlayerInfo(self.currentPlayer)
         
-
     def sellHouse(self):
-        return
+        prop = self.board.current_property
+        prop.noOfHouses -= 1
+        self.board.drawHouses(prop)
+        if prop.noOfHouses == 0:
+            self.board.sell_house.config(state="disabled")
+        self.currentPlayer.balance += prop.costOfHouse
+        self.board.displayPlayerInfo(self.currentPlayer)
 
     def sellProperty(self):
-        return
+        place = self.board.places[self.currentPlayer.position]
+        if place.type == "property":
+            prop = self.board.getProperty(place.getName())
+            self.currentPlayer.sellProperty(prop)
+            self.board.displayPlayerInfo(self.currentPlayer)
+            self.board.drawHouses(prop)
+            self.board.updateInfo("event",prop)
+            
+            for prop in self.board.properties[prop.colour]: #the other properties of the same colour
+                prop.isMonopoly = False
+            prop.owner = None
+        elif place.type == "station":
+            self.currentPlayer.sellStation(place)
+        elif place.type == "utility":
+            self.currentPlayer.sellUtility(place)
+
+        place.owner = None
+
+        self.board.displayPlayerInfo(self.currentPlayer)
+        self.board.updateInfo("event",place)
+
+
+        self.board.sell_property.config(state="disabled")
+        self.board.build_house.config(state="disabled")
 
     def endTurn(self):
         self.currentPlayer = self.getOtherPlayer()

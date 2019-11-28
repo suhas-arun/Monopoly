@@ -263,7 +263,16 @@ class Board:
             if hasattr(self,"currentPlayer"):
                 if self.currentPlayer == place.owner and self.current_property.isMonopoly and self.current_property.noOfHouses < 5:
                     self.build_house.config(state="normal")
-                            
+        
+        #checks if you can sell a house on the current place
+        if place.type == "property":
+            self.current_property = self.getProperty(place.getName())
+            if self.current_property.noOfHouses > 0:
+                self.sell_house.config(state="normal")
+
+        #checks if the place can be sold
+        if place.owner == self.currentPlayer:
+            self.sell_property.config(state="normal")
 
         place_info = place.getInfo()
         place_type = place_info[0]
@@ -423,8 +432,8 @@ class Board:
         
     def drawHouses(self,prop):
         noOfHouses = prop.noOfHouses
-        position = self.currentPlayer.position
-
+        position = self.places.index(self.getPlace(prop.getName()))
+        
         #if the property is in the bottom row
         if position < 10: 
             x_pos = float(self.current_property.coords[0])

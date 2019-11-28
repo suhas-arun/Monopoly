@@ -25,7 +25,6 @@ player2 = Player.Player(2, "blue")
 
 Monopoly = Game.Game(window, board, player1, player2)
 Monopoly.setupGame()
-Monopoly.Game()
-
+board.roll_button.config(state="normal")
 
 window.mainloop()
