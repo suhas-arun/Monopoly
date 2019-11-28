@@ -35,17 +35,22 @@ class Game:
         self.board.roll_button.config(state="normal")
 
     def makeTurn(self):
+        if self.currentPlayer.inJail:
+            self.Jail()
+            return
+
         self.die1 = random.randint(1, 6)
         self.die2 = random.randint(1, 6)
         self.board.displayPlayerOptions(
             self.currentPlayer, self.die1, self.die2, self)  # refresh dice display
+        self.board.flashDiceBox()
         # prevents the player from rolling again
         self.board.roll_button.config(state="disabled")
         total = self.die1 + self.die2
 
         if self.die1 != self.die2:  # if the player doesn't roll a double...
             self.move(total)
-            self.noOfDoubles = 0
+            self.currentPlayer.noOfDoubles = 0
         else:
             self.currentPlayer.noOfDoubles += 1
             if self.currentPlayer.noOfDoubles == 3:
@@ -54,37 +59,43 @@ class Game:
                 self.currentPlayer.position = 10
                 self.board.updatePlayer(self.currentPlayer)
             else:
-                self.move(total)
-                self.popup("double")
-                # lets the player roll again
-                self.board.roll_button.config(state="normal")
+                if not self.currentPlayer.inJail:
+                    self.move(total)
+                    self.popup("double")
+                    # lets the player roll again
+                    self.board.roll_button.config(state="normal")
 
         self.board.displayPlayerInfo(self.currentPlayer)
 
         self.board.end_turn.config(state="normal")
 
     def move(self, total):
+        if self.currentPlayer.inJail:
+            return
+
         self.currentPlayer.position += total  # moves player
         if self.currentPlayer.position > 39:  # checks if the player has passed GO
             self.currentPlayer.balance += 200  # get £200 for passing GO
             self.currentPlayer.position -= 39
+            self.board.updatePlayer(self.currentPlayer)
             self.popup("go", 200)
+
         self.board.updatePlayer(self.currentPlayer)
         self.board.displayPlayerInfo(self.currentPlayer)
         current_place = self.board.places[self.currentPlayer.position]
 
         if current_place.type in ["property", "utility", "station"]:
-            self.board.updateInfo("bruh", current_place)
+            self.board.updateInfo("event", current_place)
             if current_place.owner == 0:  # if unowned, allow player to buy
                 self.board.buy_button.config(state="normal")
 
-            elif current_place.owner == self.getOtherPlayer():
+            elif current_place.owner == self.getOtherPlayer(): #if place is owned by the other player
                 # pay rent
                 self.popup("rent", current_place)
                 otherPlayer = self.getOtherPlayer()
                 self.currentPlayer.payRent(
                     current_place.getRent(total), otherPlayer)
-                # updates the other player's on screen balance
+                # updates the other player's on-screen balance
                 self.board.displayPlayerInfo(self.getOtherPlayer())
 
         elif current_place.type == "chance":
@@ -98,7 +109,17 @@ class Game:
             self.popup("tax", 100)
             self.currentPlayer.balance -= 100
 
-        self.board.updateInfo("bruh", current_place)
+        elif current_place.getName() == "Go To Jail":
+            self.currentPlayer.inJail = True
+            self.currentPlayer.position = 10
+            self.popup("go to jail")
+            self.board.updatePlayer(self.currentPlayer)
+
+        if self.currentPlayer.position == 10: #jail
+            info = (self.currentPlayer.inJail,self.currentPlayer.turnsInJail) 
+            self.board.updateInfo("event",current_place,info)
+        else:
+            self.board.updateInfo("event", current_place)
 
     def buy(self):
         current_place = self.board.places[self.currentPlayer.position]
@@ -113,7 +134,7 @@ class Game:
             self.currentPlayer.addUtility(current_place)
             current_place.owner = self.currentPlayer
 
-        self.board.updateInfo("bruh", current_place)
+        self.board.updateInfo("event", current_place)
         self.board.buy_button.config(state="disabled")
         self.board.displayPlayerInfo(self.currentPlayer)
 
@@ -128,14 +149,52 @@ class Game:
         return
 
     def endTurn(self):
-        if self.currentPlayer == self.player1:
-            self.currentPlayer = self.player2
-        else:
-            self.currentPlayer = self.player1
-
+        self.currentPlayer = self.getOtherPlayer()
         self.board.displayPlayerOptions(
             self.currentPlayer, self.die1, self.die2, self)
-        self.board.roll_button.config(state="normal")
+        if not self.currentPlayer.inJail:
+            self.board.roll_button.config(state="normal")
+        else:
+            self.makeTurn()
+
+    def Jail(self):
+        self.currentPlayer.turnsInJail += 1
+        current_place = self.board.places[self.currentPlayer.position]
+        info = (self.currentPlayer.inJail,self.currentPlayer.turnsInJail)
+        self.board.updateInfo("event",current_place,info)
+
+        if self.currentPlayer.turnsInJail == 3:
+            tkinter.messagebox.showinfo("Jail","You have been in jail for 3 turns. Roll to move out of jail")
+            self.currentPlayer.inJail = False
+            self.currentPlayer.turnsInJail = 0
+            self.board.updatePlayer(self.currentPlayer)
+            self.board.roll_button.config(state="normal")
+        elif tkinter.messagebox.askquestion("You are in Jail","Would you like to pay £50 to get out of jail?") == "yes":
+            self.currentPlayer.turnsInJail = 0
+            self.currentPlayer.inJail = False 
+            self.currentPlayer.balance -= 50
+            self.board.displayPlayerInfo(self.currentPlayer)
+            self.board.updatePlayer(self.currentPlayer)
+            self.board.roll_button.config(state="normal")
+
+        else:
+            self.die1 = random.randint(1, 6)
+            self.die2 = random.randint(1, 6)
+            self.board.displayPlayerOptions(
+                self.currentPlayer, self.die1, self.die2, self)  # refresh dice display
+            self.board.flashDiceBox()
+            
+            
+            if self.die1 == self.die2:
+                self.currentPlayer.turnsInJail = 0
+                self.currentPlayer.inJail = False
+                tkinter.messagebox.showinfo("Well done!","You rolled a double so you are now out of jail!\nRoll to move")
+                self.board.updatePlayer(self.currentPlayer)
+                self.board.roll_button.config(state="normal")
+
+        self.board.end_turn.config(state="normal")
+            
+            
 
     def getOtherPlayer(self):
         if self.currentPlayer.number == 1:
@@ -145,7 +204,6 @@ class Game:
 
     def initialiseChances(self):
         self.chances = []
-        # I needed to use the csv module to change the encoding to UTF-8 as the £ sign was not showing up properly on the tkinter messagebox
         with open("chances.csv", encoding="utf8") as csvfile:
             csvreader = csv.reader(csvfile, delimiter=",")
             for line in csvreader:
@@ -159,9 +217,11 @@ class Game:
         chance = self.getChance()
         place = self.board.places[self.currentPlayer.position]
         tkinter.messagebox.showinfo(place.getName(), message=chance[0])
-        # print(self.currentPlayer.balance)
         if chance[1] == "move":
-            self.currentPlayer.position = int(chance[2])
+            place = int(chance[2])
+            if place == 10: #jail
+                self.currentPlayer.inJail = True
+            self.currentPlayer.position = place
         elif chance[1] == "pay":
             self.currentPlayer.balance -= int(chance[2])
         elif chance[1] == "get":
@@ -188,3 +248,12 @@ class Game:
             
         elif popup_type == "three doubles":
             tkinter.messagebox.showwarning("Jail",message="You rolled 3 doubles in a row. Go to jail!")
+            info = (self.currentPlayer.inJail,self.currentPlayer.turnsInJail)
+            self.board.updateInfo("event",self.board.getPlace("Jail"),info)
+
+
+        elif popup_type == "go to jail":
+            tkinter.messagebox.showwarning("Jail",message="Go to Jail!")
+            info = (self.currentPlayer.inJail,self.currentPlayer.turnsInJail)
+            self.board.updateInfo("event",self.board.getPlace("Jail"),info)
+

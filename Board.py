@@ -1,6 +1,5 @@
 import tkinter
 
-
 class Board:
     def __init__(self, parent, canvas, places, properties):
         self.places = places
@@ -16,6 +15,11 @@ class Board:
                 if property.getName() == name:
                     return property
 
+    def getPlace(self,name):
+        for place in self.places:
+            if place.getName() == name:
+                return place
+
     def drawPlayer(self, player):
         player_label = player.label
         player_label.lift()
@@ -30,8 +34,11 @@ class Board:
         player.label = tkinter.Label(self.parent, width=2, height=1, text=str(
             player.number), bg=player.colour, fg="white")
         new_player_label = player.label
-        player_position = self.places[player.position].getPosition()
-        player_position_x, player_position_y = player_position[0], player_position[1]
+        if player.position == 10 and player.inJail: #jail:
+            player_position_x, player_position_y, = 50, 615
+        else:
+            player_position = self.places[player.position].getPosition()
+            player_position_x, player_position_y = player_position[0], player_position[1]
         new_player_label.place(x=player_position_x,
                                y=player_position_y, anchor="center")
 
@@ -54,31 +61,6 @@ class Board:
         self.info_label.place(x=327.5, y=400, anchor="center")
 
         self.owner_label = tkinter.Label(font=("Helvetica", 10, "bold"))
-
-        # draws corner places
-        corner1 = tkinter.Frame(self.parent, width=79,
-                                height=79).place(x=0, y=0)  # top left corner
-        self.canvas.create_rectangle(0, 0, 80, 80)
-        tkinter.Label(corner1, text="\n".join(
-            self.places[20].getName().upper().split())).place(x=40, y=40, anchor="center")
-
-        corner2 = tkinter.Frame(self.parent, width=79,
-                                height=79).place(x=576, y=0)  # top right corner
-        self.canvas.create_rectangle(575, 0, 655, 80)
-        tkinter.Label(corner2, text="GO TO\nJAIL").place(
-            x=615, y=40, anchor="center")
-
-        corner3 = tkinter.Frame(
-            self.parent, width=79, height=79).place(x=0, y=576)  # bottom left corner
-        self.canvas.create_rectangle(0, 575, 80, 655)
-        tkinter.Label(corner3, text="\n".join(
-            self.places[10].getName().upper().split())).place(x=40, y=615, anchor="center")
-
-        corner4 = tkinter.Frame(
-            self.parent, width=79, height=79).place(x=576, y=576)  # bottom right corner
-        self.canvas.create_rectangle(575, 575, 655, 655)
-        tkinter.Label(corner4, text=self.places[0].getName().upper(), font=("Helvetica", 32)).place(
-            x=615, y=615, anchor="center")
 
         # top row
         for i in range(9):
@@ -243,8 +225,37 @@ class Board:
                     tkinter.Label(place_frame, text="\n".join(place.getName().upper().split()), font=(
                         "Helvetica", 6)).place(x=40, y=27, anchor="center")
 
+
+        # draws corner places
+        corner1 = tkinter.Frame(self.parent, width=79,
+                                height=79).place(x=0, y=0)  # top left corner
+        self.canvas.create_rectangle(0, 0, 80, 80)
+        tkinter.Label(corner1, text="\n".join(
+            self.places[20].getName().upper().split())).place(x=40, y=40, anchor="center")
+
+        corner2 = tkinter.Frame(self.parent, width=79,
+                                height=79).place(x=576, y=0)  # top right corner
+        self.canvas.create_rectangle(575, 0, 655, 80)
+        tkinter.Label(corner2, text="GO TO\nJAIL").place(
+            x=615, y=40, anchor="center")
+
+        # bottom left corner
+        self.canvas.create_rectangle(0, 575, 80, 655, fill=self.default_colour)
+        tkinter.Label(text="\n".join(
+            self.places[10].getName().upper().split())).place(x=50, y=605, anchor="center")
+        self.canvas.create_line(20,575,20,635)
+        self.canvas.create_line(20,635,80,635)
+        tkinter.Label(text="J\nU\nS\nT",font=("Helvetica",8)).place(x=10,y=610,anchor="center")
+        tkinter.Label(text="VISITING",font=("Helvetica",7)).place(x=50,y=645,anchor="center")
+
+        corner4 = tkinter.Frame(
+            self.parent, width=79, height=79).place(x=576, y=576)  # bottom right corner
+        self.canvas.create_rectangle(575, 575, 655, 655)
+        tkinter.Label(corner4, text=self.places[0].getName().upper(), font=("Helvetica", 32)).place(
+            x=615, y=615, anchor="center")
+
     # updates info box in the middle of the board
-    def updateInfo(self, ignore, place):
+    def updateInfo(self, ignore, place,jail_info=None):
         place_info = place.getInfo()
         place_type = place_info[0]
         info = place_info[1]
@@ -285,12 +296,26 @@ class Board:
                 price), font=("Helvetica", 10))
             self.info_label.place(x=327.5, y=420, anchor="center")
 
+        elif place_type == "jail":
+            self.canvas.create_rectangle(
+                230, 277.5, 425, 322.5, fill=self.default_colour)
+            self.place_name_label.config(text="JAIL",font=("Helvetica",16),bg=self.default_colour)
+            self.place_name_label.place(x=327.5, y=300, anchor="center")
+            inJail, turnsInJail = jail_info
+            if inJail:
+                self.info_label.config(text="You have been in jail for\n{} turn(s).\n\nYou can leave jail by either:\n-Paying £50\n-Rolling a double\n-Waiting 3 turns".format(turnsInJail))
+            else:
+                self.info_label.config(text="Just Visiting",font=("Helvetica",12))
+
         owner = "Unowned" if place.owner == 0 else "Owned by Player " + \
             str(place.owner.number)
         self.owner_label.config(text=owner)
-        if place.type in ["property","utility","station"]:
-            self.owner_label.place(x=327.5, y=510, anchor="center")
-
+        if place.type in ["property", "utility", "station"]:
+            self.owner_label.config(text=owner)
+        else:
+            self.owner_label.config(text="")
+        self.owner_label.place(x=327.5, y=510, anchor="center")
+        
     def displayPlayerInfo(self, player):
         player_frame = tkinter.Frame(
             self.parent, width=400, height=300, bg=self.background_colour, relief="ridge", bd=3)
@@ -354,9 +379,9 @@ class Board:
         currentplayer_label.place(x=97, y=60, anchor="center")
 
         dice_total = die1 + die2
-        dice_box = tkinter.Label(options_frame, text="Dice 1: {}\nDice2: {}\nTotal: {}".format(
+        self.dice_box = tkinter.Label(options_frame, text="Dice 1: {}\nDice2: {}\nTotal: {}".format(
             die1, die2, dice_total), bg="white", borderwidth=2, relief="raised", font=("Helvetica", 12), padx=8, pady=8, justify="left")
-        dice_box.place(x=97, y=130, anchor="center")
+        self.dice_box.place(x=97, y=130, anchor="center")
 
         self.roll_button = tkinter.Button(options_frame, text="Roll", bg="white", font=(
             "Helvetica", 16, "bold"), state="disabled", command=game.makeTurn)
@@ -381,3 +406,9 @@ class Board:
         self.end_turn = tkinter.Button(options_frame, text="End Turn", bg="white", font=(
             "Helvetica", 18, "bold"), state="disabled", command=game.endTurn)
         self.end_turn.place(x=97, y=600, anchor="center")
+
+    #when the dice are rolled, a border appears around the dice box to make it more obvious
+    def flashDiceBox(self):
+        self.dice_box.config(bd=5,font=("Helvetica",12,"bold"))
+        self.parent.after(1000, lambda: self.dice_box.config(bd=2,font=("Helvetica",12,)))
+        

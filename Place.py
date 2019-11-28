@@ -58,6 +58,8 @@ class Property(Place):
 
     def getRent(self):
         rent = self.rent[self.getNoOfHouses()]
+        if self.isMonopoly:
+            rent *= 2 #rent is doubled if the property is part of a monopoly
         return rent
 
     def getNoOfHouses(self):

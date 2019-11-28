@@ -11,6 +11,7 @@ class Player:
         self.stations_owned = []
         self.utilities_owned = []
         self.inJail = False
+        self.turnsInJail = 0
         self.balance = 1500
         self.label = None
 

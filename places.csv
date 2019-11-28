@@ -8,7 +8,7 @@ property,The Angel Islington,sky blue,100,6,30,90,270,400,550,50,272.5,615
 chance,Chance,217.5,615
 property,Euston Road,sky blue,100,6,30,90,270,400,550,50,162.5,615
 property,Pentonville Road,sky blue,120,6,30,90,270,400,550,50,107.5,615
-corner,Jail,40,615
+jail,Jail,10,645
 property,Pall Mall,deep pink,140,10,50,150,450,625,750,100,40,547.5
 utility,Electric Company,150,40,492.5
 property,Whitehall,deep pink,140,10,50,150,450,625,750,100,40,437.5
