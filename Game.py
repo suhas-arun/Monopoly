@@ -26,6 +26,7 @@ class Game:
         self.board.displayPlayerInfo(self.player1)
         self.board.displayPlayerInfo(self.player2)
 
+        self.gameOver = False
         self.board.displayPlayerOptions(
             self.currentPlayer, self.die1, self.die2, self)
 
@@ -51,7 +52,7 @@ class Game:
             self.currentPlayer.noOfDoubles = 0
         else:
             self.currentPlayer.noOfDoubles += 1
-            if self.currentPlayer.noOfDoubles == 3:
+            if self.currentPlayer.noOfDoubles == 3:  # if the player rolls three doubles in a row, they go to jail
                 self.currentPlayer.inJail = True
                 self.popup("three doubles")
                 self.currentPlayer.position = 10
@@ -65,10 +66,11 @@ class Game:
 
         self.board.displayPlayerInfo(self.currentPlayer)
 
+        self.checkEndGame()
         self.board.end_turn.config(state="normal")
 
     def move(self, total):
-        if self.currentPlayer.inJail:
+        if self.currentPlayer.inJail:  # player can't move if they are in jail
             return
 
         self.currentPlayer.position += total  # moves player
@@ -84,18 +86,20 @@ class Game:
 
         if current_place.type in ["property", "utility", "station"]:
             if current_place.type == "property":
-                self.board.updateInfo("event", self.board.getProperty(current_place.getName()))
+                self.board.updateInfo(
+                    "event", self.board.getProperty(current_place.getName()))
             else:
                 self.board.updateInfo("event", current_place)
             if current_place.owner is None:  # if unowned, allow player to buy
                 self.board.buy_button.config(state="normal")
 
-            elif current_place.owner == self.getOtherPlayer(): #if place is owned by the other player
+            elif current_place.owner == self.getOtherPlayer():  # if place is owned by the other player
                 # pay rent
                 self.popup("rent", current_place)
                 otherPlayer = self.getOtherPlayer()
                 if current_place.type == "property":
-                    rent = self.board.getProperty(current_place.getName()).getRent()
+                    rent = self.board.getProperty(
+                        current_place.getName()).getRent()
                 else:
                     rent = current_place.getRent(total)
                 self.currentPlayer.payRent(
@@ -120,59 +124,72 @@ class Game:
             self.popup("go to jail")
             self.board.updatePlayer(self.currentPlayer)
 
-        if self.currentPlayer.position == 10: #jail
-            info = (self.currentPlayer.inJail,self.currentPlayer.turnsInJail) 
-            self.board.updateInfo("event",current_place,info)
+        if self.currentPlayer.position == 10:  # jail
+            info = (self.currentPlayer.inJail, self.currentPlayer.turnsInJail)
+            self.board.updateInfo("event", current_place, info)
         else:
             self.board.updateInfo("event", current_place)
+
+        self.checkEndGame()
 
     def buy(self):
         current_place = self.board.places[self.currentPlayer.position]
         if current_place.type == "property":
-            self.currentPlayer.addProperty(
-                self.board.getProperty(current_place.getName()))
-            current_place.owner = self.currentPlayer
-        elif current_place.type == "station":
-            self.currentPlayer.addStation(current_place)
-            current_place.owner = self.currentPlayer
-        else:
-            self.currentPlayer.addUtility(current_place)
+            prop = self.board.getProperty(current_place.getName())
+            self.currentPlayer.addProperty(prop)
             current_place.owner = self.currentPlayer
 
-        self.board.updateInfo("event", current_place)
-        self.board.buy_button.config(state="disabled")
-        self.board.displayPlayerInfo(self.currentPlayer)
+            self.board.updateInfo("event", current_place)
+            self.board.buy_button.config(state="disabled")
+            self.board.displayPlayerInfo(self.currentPlayer)
+        else:
+            if current_place.type == "station":
+                self.currentPlayer.addStation(current_place)
+                current_place.owner = self.currentPlayer
+            else:
+                self.currentPlayer.addUtility(current_place)
+                current_place.owner = self.currentPlayer
+
+            self.board.updateInfo("event", current_place)
+            # prevents the same place being bought more than once
+            self.board.buy_button.config(state="disabled")
+            self.board.displayPlayerInfo(self.currentPlayer)
+        self.checkEndGame()
 
     def buildHouse(self):
         prop = self.board.current_property
         prop.noOfHouses += 1
-        self.board.drawHouses(prop)
+        self.board.drawHouses(prop)  # displays houses on the board
         if prop.noOfHouses == 5:
             self.board.build_house.config(state="disabled")
         self.currentPlayer.balance -= prop.costOfHouse
         self.board.displayPlayerInfo(self.currentPlayer)
-        
+
+        self.checkEndGame()
+
     def sellHouse(self):
         prop = self.board.current_property
         prop.noOfHouses -= 1
-        self.board.drawHouses(prop)
+        self.board.drawHouses(prop)  # displays houses on the board
         if prop.noOfHouses == 0:
             self.board.sell_house.config(state="disabled")
         self.currentPlayer.balance += prop.costOfHouse
         self.board.displayPlayerInfo(self.currentPlayer)
 
-    def sellProperty(self):
-        place = self.board.getPlace(self.board.current_property.getName())
+    def sellProperty(self, place=None):
+        place = self.board.current_place
         if place.type == "property":
             prop = self.board.getProperty(place.getName())
             self.currentPlayer.sellProperty(prop)
             self.board.displayPlayerInfo(self.currentPlayer)
             self.board.drawHouses(prop)
-            self.board.updateInfo("event",prop)
-            
-            for prop in self.board.properties[prop.colour]: #the other properties of the same colour
+            self.board.updateInfo("event", prop)
+
+            # the other properties of the same colour
+            for prop in self.board.properties[prop.colour]:
                 prop.isMonopoly = False
             prop.owner = None
+
         elif place.type == "station":
             self.currentPlayer.sellStation(place)
         elif place.type == "utility":
@@ -181,8 +198,7 @@ class Game:
         place.owner = None
 
         self.board.displayPlayerInfo(self.currentPlayer)
-        self.board.updateInfo("event",place)
-
+        self.board.updateInfo("event", place)
 
         self.board.sell_property.config(state="disabled")
         self.board.build_house.config(state="disabled")
@@ -200,18 +216,20 @@ class Game:
     def Jail(self):
         self.currentPlayer.turnsInJail += 1
         current_place = self.board.places[self.currentPlayer.position]
-        info = (self.currentPlayer.inJail,self.currentPlayer.turnsInJail)
-        self.board.updateInfo("event",current_place,info)
+        info = (self.currentPlayer.inJail, self.currentPlayer.turnsInJail)
+        self.board.updateInfo("event", current_place, info)
 
         if self.currentPlayer.turnsInJail == 3:
-            tkinter.messagebox.showinfo("Jail","You have been in jail for 3 turns. Roll to move out of jail")
+            tkinter.messagebox.showinfo(
+                "Jail", "You have been in jail for 3 turns. Roll to move out of jail")
             self.currentPlayer.inJail = False
             self.currentPlayer.turnsInJail = 0
             self.board.updatePlayer(self.currentPlayer)
             self.board.roll_button.config(state="normal")
-        elif tkinter.messagebox.askquestion("You are in Jail","Would you like to pay £50 to get out of jail?") == "yes":
+
+        elif tkinter.messagebox.askquestion("You are in Jail", "Would you like to pay £50 to get out of jail?") == "yes":
             self.currentPlayer.turnsInJail = 0
-            self.currentPlayer.inJail = False 
+            self.currentPlayer.inJail = False
             self.currentPlayer.balance -= 50
             self.board.displayPlayerInfo(self.currentPlayer)
             self.board.updatePlayer(self.currentPlayer)
@@ -223,16 +241,16 @@ class Game:
             self.board.displayPlayerOptions(
                 self.currentPlayer, self.die1, self.die2, self)  # refresh dice display
             self.board.flashDiceBox()
-            
-            
+
             if self.die1 == self.die2:
                 self.currentPlayer.turnsInJail = 0
                 self.currentPlayer.inJail = False
-                tkinter.messagebox.showinfo("Well done!","You rolled a double so you are now out of jail!\nRoll to move")
+                tkinter.messagebox.showinfo(
+                    "Well done!", "You rolled a double so you are now out of jail!\nRoll to move")
                 self.board.updatePlayer(self.currentPlayer)
                 self.board.roll_button.config(state="normal")
 
-        self.board.end_turn.config(state="normal")   
+        self.board.end_turn.config(state="normal")
 
     def getOtherPlayer(self):
         if self.currentPlayer.number == 1:
@@ -257,7 +275,7 @@ class Game:
         tkinter.messagebox.showinfo(place.getName(), message=chance[0])
         if chance[1] == "move":
             place = int(chance[2])
-            if place == 10: #jail
+            if place == 10:  # jail
                 self.currentPlayer.inJail = True
             self.currentPlayer.position = place
         elif chance[1] == "pay":
@@ -269,19 +287,20 @@ class Game:
             self.getOtherPlayer().balance -= int(chance[2])
 
     def popup(self, popup_type, info=None):
-        
+
         if popup_type == "rent":
             current_place = info
             if current_place.type == "property":
-                    rent = self.board.getProperty(current_place.getName()).getRent()
+                rent = self.board.getProperty(
+                    current_place.getName()).getRent()
             else:
                 rent = current_place.getRent(self.die1+self.die2)
             tkinter.messagebox.showinfo("Pay Rent!", message="You have landed on {} which is owned by Player {}.\nYou have to pay £{}".format(
                 current_place.info[0], current_place.owner.number, rent))
-        
+
         elif popup_type == "tax":
             tkinter.messagebox.showinfo("Tax", message="Pay £{}".format(info))
-        
+
         elif popup_type == "go":
             tkinter.messagebox.showinfo(
                 "GO", message="Collect £{} for passing GO!".format(info))
@@ -289,14 +308,69 @@ class Game:
         elif popup_type == "double":
             tkinter.messagebox.showinfo(
                 "Double", message="You have rolled a double so you get one more roll!")
-            
-        elif popup_type == "three doubles":
-            tkinter.messagebox.showwarning("Jail",message="You rolled 3 doubles in a row. Go to jail!")
-            info = (self.currentPlayer.inJail,self.currentPlayer.turnsInJail)
-            self.board.updateInfo("event",self.board.getPlace("Jail"),info)
 
+        elif popup_type == "three doubles":
+            tkinter.messagebox.showwarning(
+                "Jail", message="You rolled 3 doubles in a row. Go to jail!")
+            info = (self.currentPlayer.inJail, self.currentPlayer.turnsInJail)
+            self.board.updateInfo("event", self.board.getPlace("Jail"), info)
 
         elif popup_type == "go to jail":
-            tkinter.messagebox.showwarning("Jail",message="Go to Jail!")
-            info = (self.currentPlayer.inJail,self.currentPlayer.turnsInJail)
-            self.board.updateInfo("event",self.board.getPlace("Jail"),info)
+            tkinter.messagebox.showwarning("Jail", message="Go to Jail!")
+            info = (self.currentPlayer.inJail, self.currentPlayer.turnsInJail)
+            self.board.updateInfo("event", self.board.getPlace("Jail"), info)
+
+    def checkEndGame(self):
+        if self.currentPlayer.balance <= 0:
+            self.board.roll_button.config(state="disabled")
+            self.board.end_turn.config(state="disabled")
+            self.gameOver = True
+            tkinter.messagebox.showwarning(
+                "Bankrupt!", "Your balance has gone below £0! Some properties will be automatically sold.")
+
+            # if the player is in debt, the player's utilities are automatically sold to make some money
+            sold_properties = []
+
+            for i in range(len(self.currentPlayer.utilities_owned)):
+                if self.currentPlayer.balance > 0:
+                    break
+                utility = self.currentPlayer.utilities_owned[i]
+                self.sellProperty(utility)
+                sold_properties.append(utility.getName())
+
+            # if the player's balance is still less than 0, their stations are automatically sold.
+            if self.currentPlayer.balance <= 0:
+                for i in range(len(self.currentPlayer.stations_owned)):
+                    if self.currentPlayer.balance > 0:
+                        break
+                    station = self.currentPlayer.stations_owned[i]
+                    self.sellProperty(station)
+                    sold_properties.append(station.getName())
+
+            # if the player's balance is still less than 0, their properties are automatically sold.
+            if self.currentPlayer.balance <= 0:
+                for i in range(len(self.currentPlayer.properties_owned)):
+                    if self.currentPlayer.balance > 0:
+                        break
+                    prop = self.board.getPlace(
+                        self.currentPlayer.properties_owned[i].getName())
+                    self.sellProperty(prop)
+                    sold_properties.append(prop.getName())
+
+            # if properties were sold:
+            if sold_properties:
+                tkinter.messagebox.showinfo(
+                    "Bankrupt", "The following properties were automatically sold:\n{}".format(", ".join(sold_properties)))
+
+            # if the player's balance is still less than 0, the game is over
+            if self.currentPlayer.balance <= 0:
+                tkinter.messagebox.showwarning(
+                    "Game Over!", "Player {} has gone bankrupt!".format(self.currentPlayer.number))
+                tkinter.messagebox.showinfo("Player {} Wins!".format(self.getOtherPlayer(
+                ).number), "Well done Player {}!".format(self.getOtherPlayer().number))
+                self.endGame()
+            else:
+                self.board.end_turn.config(state="normal")
+
+    def endGame(self):
+        self.parent.destroy()

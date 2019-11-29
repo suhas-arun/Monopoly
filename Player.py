@@ -36,11 +36,11 @@ class Player:
         self.balance += int(prop.price)
         self.balance += prop.noOfHouses * prop.costOfHouse
         prop.noOfHouses = 0
-    
+
     def sellStation(self, station):
         self.stations_owned.remove(station)
         self.balance += int(station.info[1])
-    
+
     def sellUtility(self, utility):
         self.utilities_owned.remove(utility)
         self.balance += int(utility.info[1])

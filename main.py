@@ -1,5 +1,4 @@
-# work on ending the game
-
+# made in Python 3.7.2
 import tkinter
 import Place
 import Board

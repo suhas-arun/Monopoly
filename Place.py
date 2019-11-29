@@ -17,11 +17,14 @@ class Place:
     def getPosition(self):
         return self.coords
 
+    def getPrice(self):
+        return int(self.info[1])
+
     def getName(self):
         return self.info[0]
 
     def getRent(self, dice_total):
-        if self.owner is None: #if unowned
+        if self.owner is None:  # if unowned
             return
 
         if self.type == "station":
@@ -40,8 +43,6 @@ class Place:
                 return 10 * dice_total
             else:
                 return 4 * dice_total
-                
-
 
 
 class Property(Place):
@@ -52,7 +53,7 @@ class Property(Place):
         self.coords = Place.coords
         self.name = self.info[0]
         self.colour = self.info[1]
-        self.price = self.info[2]
+        self.price = int(self.info[2])
         self.rent = self.info[3:9]
         self.costOfHouse = int(self.info[9])
         self.isMonopoly = False
@@ -61,7 +62,7 @@ class Property(Place):
     def getRent(self):
         rent = self.rent[self.getNoOfHouses()]
         if self.isMonopoly and self.getNoOfHouses() == 0:
-            rent = rent #rent is doubled if the property is part of a monopoly
+            rent = rent
         return rent
 
     def getNoOfHouses(self):
@@ -100,4 +101,5 @@ with open("places.csv") as csvfile:
         else:
             info = place[1:2]
             coords = place[2:4]
+        # makes a list of all the place objects
         places.append(Place(typeOfPlace, info, coords))

@@ -1,5 +1,6 @@
 import tkinter
 
+
 class Board:
     def __init__(self, parent, canvas, places, properties):
         self.places = places
@@ -15,7 +16,7 @@ class Board:
                 if property.getName() == name:
                     return property
 
-    def getPlace(self,name):
+    def getPlace(self, name):
         for place in self.places:
             if place.getName() == name:
                 return place
@@ -28,6 +29,7 @@ class Board:
         player_label.place(x=player_position_x,
                            y=player_position_y, anchor="center")
 
+    # moves the player on the board
     def updatePlayer(self, player):
         self.currentPlayer = player
         # removes previous player label from the screen (otherwise the player is in multiple places at once)
@@ -35,7 +37,7 @@ class Board:
         player.label = tkinter.Label(self.parent, width=2, height=1, text=str(
             player.number), bg=player.colour, fg="white")
         new_player_label = player.label
-        if player.position == 10 and player.inJail: #jail:
+        if player.position == 10 and player.inJail:  # jail:
             player_position_x, player_position_y, = 50, 615
         else:
             player_position = self.places[player.position].getPosition()
@@ -70,9 +72,10 @@ class Board:
                 place_frame = tkinter.Frame(
                     self.parent, width=54, height=69)
                 place_frame.place(x=81 + 55*i, y=0)
+                # creates a box for the place
                 self.canvas.create_rectangle(80 + 55*i, 0, 80+55*(i+1), 80)
                 self.canvas.create_rectangle(
-                    80+55*i, 70, 80+55*(i+1), 80, fill=place.info[1])
+                    80+55*i, 70, 80+55*(i+1), 80, fill=place.info[1])  # creates the rectangle with the colour of the property
 
                 price_label = tkinter.Label(place_frame, text="£{}".format(
                     place.info[2]), font=("Helvetica", 8))
@@ -81,7 +84,7 @@ class Board:
                     place.getName().upper().split()), font=("Helvetica", 6), relief="flat")
                 info_button.place(x=27, y=40, anchor="center")
                 info_button.bind("<Button-1>", lambda event,
-                                 current_place=place: self.updateInfo(event, current_place))
+                                 current_place=place: self.updateInfo(event, current_place))  # if you press the button of the place name, the place's info shows up in the info box.
 
             else:
                 place_frame = tkinter.Frame(
@@ -226,7 +229,6 @@ class Board:
                     tkinter.Label(place_frame, text="\n".join(place.getName().upper().split()), font=(
                         "Helvetica", 6)).place(x=40, y=27, anchor="center")
 
-
         # draws corner places
         corner1 = tkinter.Frame(self.parent, width=79,
                                 height=79).place(x=0, y=0)  # top left corner
@@ -244,10 +246,13 @@ class Board:
         self.canvas.create_rectangle(0, 575, 80, 655, fill=self.default_colour)
         tkinter.Label(text="\n".join(
             self.places[10].getName().upper().split())).place(x=50, y=605, anchor="center")
-        self.canvas.create_line(20,575,20,635)
-        self.canvas.create_line(20,635,80,635)
-        tkinter.Label(text="J\nU\nS\nT",font=("Helvetica",8)).place(x=10,y=610,anchor="center")
-        tkinter.Label(text="VISITING",font=("Helvetica",7)).place(x=50,y=645,anchor="center")
+        # creates the "just visiting" thing
+        self.canvas.create_line(20, 575, 20, 635)
+        self.canvas.create_line(20, 635, 80, 635)
+        tkinter.Label(text="J\nU\nS\nT", font=("Helvetica", 8)
+                      ).place(x=10, y=610, anchor="center")
+        tkinter.Label(text="VISITING", font=("Helvetica", 7)
+                      ).place(x=50, y=645, anchor="center")
 
         corner4 = tkinter.Frame(
             self.parent, width=79, height=79).place(x=576, y=576)  # bottom right corner
@@ -257,28 +262,33 @@ class Board:
 
     # updates info box in the middle of the board
     def updateInfo(self, ignore, place, jail_info=None):
-        #checks if you can build a house on the current place
+        # checks if you can build a house on the current place
+        self.current_place = place
         if place.type == "property":
             self.current_property = self.getProperty(place.getName())
-            if hasattr(self,"currentPlayer"):
+            if hasattr(self, "currentPlayer"):
                 if self.currentPlayer == place.owner and self.current_property.isMonopoly and self.current_property.noOfHouses < 5:
                     self.build_house.config(state="normal")
-        
-        #checks if you can sell a house on the current place
+
+        # checks if you can sell a house on the current place
         if place.type == "property":
             self.current_property = self.getProperty(place.getName())
             if self.current_property.noOfHouses > 0:
                 self.sell_house.config(state="normal")
 
-        #checks if the place can be sold
+        # checks if the place can be sold
         if place.owner == self.currentPlayer:
             self.sell_property.config(state="normal")
+        else:
+            self.sell_property.config(state="disabled")
 
         place_info = place.getInfo()
         place_type = place_info[0]
         info = place_info[1]
         owner = place_info[2]
         name = info[0]
+
+        # shows the info of the current place in the box in the middle
         if place_type == "property":
             colour = info[1]
             self.canvas.create_rectangle(230, 277.5, 425, 322.5, fill=colour)
@@ -287,10 +297,9 @@ class Board:
             self.place_name_label.place(x=327.5, y=300, anchor="center")
             price, rent0, rent1, rent2, rent3, rent4, rent5, cost_of_house = info[
                 2], info[3], info[4], info[5], info[6], info[7], info[8], info[9]
-            if owner is None:
-                self.info_label.config(text="Price: £{0}\nRent: £{1}\n\nWith 1 House: £{2}\nWith 2 Houses: £{3}\nWith 3 Houses: £{4}\nWith 4 Houses: £{5}\nWith Hotel: £{6}\n\nHouses cost £{7} each\nA Hotel costs £{7}".format(
-                    price, rent0, rent1, rent2, rent3, rent4, rent5, cost_of_house), font=("Helvetica", 9))
-                self.info_label.place(x=327.5, y=410, anchor="center")
+            self.info_label.config(text="Price: £{0}\nRent: £{1}\n\nWith 1 House: £{2}\nWith 2 Houses: £{3}\nWith 3 Houses: £{4}\nWith 4 Houses: £{5}\nWith Hotel: £{6}\n\nHouses cost £{7} each\nA Hotel costs £{7}".format(
+                price, rent0, rent1, rent2, rent3, rent4, rent5, cost_of_house), font=("Helvetica", 9))
+            self.info_label.place(x=327.5, y=410, anchor="center")
 
         elif place_type == "station":
             self.canvas.create_rectangle(
@@ -317,14 +326,18 @@ class Board:
         elif place_type == "jail":
             self.canvas.create_rectangle(
                 230, 277.5, 425, 322.5, fill=self.default_colour)
-            self.place_name_label.config(text="JAIL",font=("Helvetica",16),bg=self.default_colour)
+            self.place_name_label.config(text="JAIL", font=(
+                "Helvetica", 16), bg=self.default_colour)
             self.place_name_label.place(x=327.5, y=300, anchor="center")
             inJail, turnsInJail = jail_info
             if inJail:
-                self.info_label.config(text="You have been in jail for\n{} turn(s).\n\nYou can leave jail by either:\n-Paying £50\n-Rolling a double\n-Waiting 3 turns".format(turnsInJail))
+                self.info_label.config(
+                    text="You have been in jail for\n{} turn(s).\n\nYou can leave jail by either:\n-Paying £50\n-Rolling a double\n-Waiting 3 turns".format(turnsInJail))
             else:
-                self.info_label.config(text="Just Visiting",font=("Helvetica",12))
+                self.info_label.config(
+                    text="Just Visiting", font=("Helvetica", 12))
 
+        # shows who owns the current place or "unowned"
         owner = "Unowned" if place.owner is None else "Owned by Player " + \
             str(place.owner.number)
         self.owner_label.config(text=owner)
@@ -333,10 +346,12 @@ class Board:
         else:
             self.owner_label.config(text="")
         self.owner_label.place(x=327.5, y=510, anchor="center")
-        
+
+    # displays player info on the right side of the screen
     def displayPlayerInfo(self, player):
         player_frame = tkinter.Frame(
             self.parent, width=400, height=300, bg=self.background_colour, relief="ridge", bd=3)
+        # info for player 1 is above info for player 2
         if player.number == 1:
             player_frame.place(x=680, y=25)
         else:
@@ -386,8 +401,8 @@ class Board:
             utility.getName() for utility in player.utilities_owned), bg=self.background_colour)
         utilities_info.place(x=25, y=260)
 
+    # displays buttons on the right of the screen
     def displayPlayerOptions(self, currentPlayer, die1, die2, game):
-        # roll, buy, build house, sell house, sell property,end turn
         options_frame = tkinter.Frame(
             self.parent, width=194, height=675, bg=self.background_colour)
         options_frame.place(x=1086, y=0)
@@ -425,75 +440,82 @@ class Board:
             "Helvetica", 18, "bold"), state="disabled", command=game.endTurn)
         self.end_turn.place(x=97, y=600, anchor="center")
 
-    #when the dice are rolled, a border appears around the dice box to make it more obvious
+    # when the dice are rolled, a border appears around the dice box to make it more obvious
     def flashDiceBox(self):
-        self.dice_box.config(bd=5,font=("Helvetica",12,"bold"))
-        self.parent.after(1000, lambda: self.dice_box.config(bd=2,font=("Helvetica",12,)))
-        
-    def drawHouses(self,prop):
+        self.dice_box.config(bd=5, font=("Helvetica", 12, "bold"))
+        self.parent.after(1000, lambda: self.dice_box.config(
+            bd=2, font=("Helvetica", 12,)))
+
+    def drawHouses(self, prop):
         noOfHouses = prop.noOfHouses
         position = self.places.index(self.getPlace(prop.getName()))
-        
-        #if the property is in the bottom row
-        if position < 10: 
+
+        # if the property is in the bottom row
+        if position < 10:
             x_pos = float(self.current_property.coords[0])
             self.canvas.create_rectangle(
-                    x_pos - 27.5, 575, x_pos + 27.5, 585, fill=self.current_property.info[1])
+                x_pos - 27.5, 575, x_pos + 27.5, 585, fill=self.current_property.info[1])
             y = 580
             if noOfHouses <= 4:
                 x = x_pos - 20
                 for _ in range(noOfHouses):
-                    house = self.canvas.create_rectangle(x-3,y-3,x+3,y+3,fill="green")
+                    house = self.canvas.create_rectangle(
+                        x-3, y-3, x+3, y+3, fill="green")
                     # tkinter.Label(text="",bg="green",bd=1,width=0.1,height=0.1)
                     x += 12
             else:
-                hotel = self.canvas.create_rectangle(x_pos-4,y-4,x_pos+4,y+4,fill="red")
+                hotel = self.canvas.create_rectangle(
+                    x_pos-4, y-4, x_pos+4, y+4, fill="red")
 
-        
-        #if the property is in the left column
+        # if the property is in the left column
         elif position < 20:
             y_pos = float(self.current_property.coords[1])
             self.canvas.create_rectangle(
-                    70, y_pos - 27.5, 80, y_pos + 27.5, fill=self.current_property.info[1])
+                70, y_pos - 27.5, 80, y_pos + 27.5, fill=self.current_property.info[1])
 
             x = 75
             if noOfHouses <= 4:
                 y = y_pos - 20
                 for _ in range(noOfHouses):
-                    house = self.canvas.create_rectangle(x-3,y-3,x+3,y+3,fill="green")
+                    house = self.canvas.create_rectangle(
+                        x-3, y-3, x+3, y+3, fill="green")
                     # tkinter.Label(text="",bg="green",bd=1,width=0.1,height=0.1)
                     y += 12
             else:
-                hotel = self.canvas.create_rectangle(x-4,y_pos-4,x+4,y_pos+4,fill="red")
+                hotel = self.canvas.create_rectangle(
+                    x-4, y_pos-4, x+4, y_pos+4, fill="red")
 
-
-        #if the property is in the top row
-        elif position < 30: 
+        # if the property is in the top row
+        elif position < 30:
             x_pos = float(self.current_property.coords[0])
             self.canvas.create_rectangle(
-                    x_pos - 27.5, 70, x_pos + 27.5, 80, fill=self.current_property.info[1])
-            y = 75                
+                x_pos - 27.5, 70, x_pos + 27.5, 80, fill=self.current_property.info[1])
+            y = 75
             if noOfHouses <= 4:
                 x = x_pos - 20
                 for _ in range(noOfHouses):
-                    house = self.canvas.create_rectangle(x-3,y-3,x+3,y+3,fill="green")
+                    house = self.canvas.create_rectangle(
+                        x-3, y-3, x+3, y+3, fill="green")
                     # tkinter.Label(text="",bg="green",bd=1,width=0.1,height=0.1)
                     x += 12
             else:
-                hotel = self.canvas.create_rectangle(x_pos-4,y-4,x_pos+4,y+4,fill="red")
+                hotel = self.canvas.create_rectangle(
+                    x_pos-4, y-4, x_pos+4, y+4, fill="red")
 
-        #if the property is on the right column
+        # if the property is on the right column
         else:
             y_pos = float(self.current_property.coords[1])
             self.canvas.create_rectangle(
-                    575, y_pos - 27.5, 585, y_pos + 27.5, fill=self.current_property.info[1])
+                575, y_pos - 27.5, 585, y_pos + 27.5, fill=self.current_property.info[1])
 
             x = 580
             if noOfHouses <= 4:
                 y = y_pos - 20
                 for _ in range(noOfHouses):
-                    house = self.canvas.create_rectangle(x-3,y-3,x+3,y+3,fill="green")
+                    house = self.canvas.create_rectangle(
+                        x-3, y-3, x+3, y+3, fill="green")
                     # tkinter.Label(text="",bg="green",bd=1,width=0.1,height=0.1)
                     y += 12
             else:
-                hotel = self.canvas.create_rectangle(x-4,y_pos-4,x+4,y_pos+4,fill="red")
+                hotel = self.canvas.create_rectangle(
+                    x-4, y_pos-4, x+4, y_pos+4, fill="red")
