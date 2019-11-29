@@ -1,6 +1,3 @@
-import tkinter
-
-
 class Player:
     def __init__(self, number, colour):
         self.number = number
