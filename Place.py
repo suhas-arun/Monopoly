@@ -1,4 +1,3 @@
-import tkinter
 import csv
 places = []
 
