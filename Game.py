@@ -26,7 +26,6 @@ class Game:
         self.board.displayPlayerInfo(self.player1)
         self.board.displayPlayerInfo(self.player2)
 
-        self.gameOver = False
         self.board.displayPlayerOptions(
             self.currentPlayer, self.die1, self.die2, self)
 
@@ -108,7 +107,6 @@ class Game:
                 self.board.displayPlayerInfo(self.getOtherPlayer())
 
         elif current_place.type == "chance":
-            chance = self.getChance()
             self.Chance()
             self.board.updatePlayer(self.currentPlayer)
             # updates the other player's on screen balance
@@ -164,6 +162,7 @@ class Game:
             self.board.build_house.config(state="disabled")
         self.currentPlayer.balance -= prop.costOfHouse
         self.board.displayPlayerInfo(self.currentPlayer)
+        self.board.sell_house.config(state="normal")
 
         self.checkEndGame()
 
@@ -175,9 +174,11 @@ class Game:
             self.board.sell_house.config(state="disabled")
         self.currentPlayer.balance += prop.costOfHouse
         self.board.displayPlayerInfo(self.currentPlayer)
+        self.board.build_house.config(state="normal")
 
     def sellProperty(self, place=None):
-        place = self.board.current_place
+        if not place:
+            place = self.board.current_place
         if place.type == "property":
             prop = self.board.getProperty(place.getName())
             self.currentPlayer.sellProperty(prop)
@@ -324,7 +325,6 @@ class Game:
         if self.currentPlayer.balance <= 0:
             self.board.roll_button.config(state="disabled")
             self.board.end_turn.config(state="disabled")
-            self.gameOver = True
             tkinter.messagebox.showwarning(
                 "Bankrupt!", "Your balance has gone below £0! Some properties will be automatically sold.")
 
@@ -349,11 +349,12 @@ class Game:
 
             # if the player's balance is still less than 0, their properties are automatically sold.
             if self.currentPlayer.balance <= 0:
-                for i in range(len(self.currentPlayer.properties_owned)):
+                properties = self.currentPlayer.properties_owned
+                for _ in range(len(properties)):
                     if self.currentPlayer.balance > 0:
                         break
                     prop = self.board.getPlace(
-                        self.currentPlayer.properties_owned[i].getName())
+                        properties[-1].getName())
                     self.sellProperty(prop)
                     sold_properties.append(prop.getName())
 
@@ -361,13 +362,16 @@ class Game:
             if sold_properties:
                 tkinter.messagebox.showinfo(
                     "Bankrupt", "The following properties were automatically sold:\n{}".format(", ".join(sold_properties)))
+            else:
+                tkinter.messagebox.showinfo(
+                    "Bankrupt", "Player {} has no properties to sell!".format(self.currentPlayer.number))
 
             # if the player's balance is still less than 0, the game is over
             if self.currentPlayer.balance <= 0:
                 tkinter.messagebox.showwarning(
                     "Game Over!", "Player {} has gone bankrupt!".format(self.currentPlayer.number))
                 tkinter.messagebox.showinfo("Player {} Wins!".format(self.getOtherPlayer(
-                ).number), "Well done Player {}!".format(self.getOtherPlayer().number))
+                ).number), "Well done Player {}! You win!".format(self.getOtherPlayer().number))
                 self.endGame()
             else:
                 self.board.end_turn.config(state="normal")

@@ -9,6 +9,7 @@ class Board:
         self.canvas = canvas
         self.default_colour = self.parent.cget("bg")
         self.background_colour = "#ccffcc"
+        self.currentPlayer = None
 
     def getProperty(self, name):
         for properties in self.properties.values():
@@ -266,22 +267,25 @@ class Board:
         self.current_place = place
         if place.type == "property":
             self.current_property = self.getProperty(place.getName())
-            if hasattr(self, "currentPlayer"):
-                if self.currentPlayer == place.owner and self.current_property.isMonopoly and self.current_property.noOfHouses < 5:
-                    self.build_house.config(state="normal")
+            if self.currentPlayer and self.currentPlayer == place.owner and self.current_property.isMonopoly and self.current_property.noOfHouses < 5:
+                self.build_house.config(state="normal")
+            else:
+                self.build_house.config(state="disabled")
 
         # checks if you can sell a house on the current place
         if place.type == "property":
             self.current_property = self.getProperty(place.getName())
-            if self.current_property.noOfHouses > 0:
+            if self.currentPlayer and place.owner == self.currentPlayer and self.current_property.noOfHouses > 0:
                 self.sell_house.config(state="normal")
+            else:
+                self.sell_house.config(state="disabled")
 
         # checks if the place can be sold
-        if place.owner == self.currentPlayer:
+        if self.currentPlayer != None and place.owner == self.currentPlayer:
             self.sell_property.config(state="normal")
         else:
             self.sell_property.config(state="disabled")
-
+  
         place_info = place.getInfo()
         place_type = place_info[0]
         info = place_info[1]
