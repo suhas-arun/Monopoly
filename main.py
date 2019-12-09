@@ -1,4 +1,5 @@
 # made in Python 3.7.2
+#bugs in errors.md are fixed (hopefully)
 import tkinter
 import Place
 import Board
