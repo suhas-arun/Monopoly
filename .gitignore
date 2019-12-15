@@ -81,6 +81,7 @@
 .mypy_cache/3.7/tkinter/messagebox.meta.json
 .vscode/.ropeproject/config.py
 .vscode/.ropeproject/objectdb
+.vscode/settings.json
 __pycache__/Board.cpython-37.pyc
 __pycache__/constants.cpython-37.pyc
 __pycache__/Game.cpython-37.pyc

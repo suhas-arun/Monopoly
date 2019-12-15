@@ -1,4 +1,5 @@
 import csv
+
 places = []
 
 
@@ -87,11 +88,9 @@ with open("places.csv") as csvfile:
             colour = info[1]
             # making a dictionary of properties, grouped by colour
             if colour in properties.keys():
-                properties[colour].append(
-                    Property(Place(typeOfPlace, info, coords)))
+                properties[colour].append(Property(Place(typeOfPlace, info, coords)))
             else:
-                properties[colour] = [
-                    Property(Place(typeOfPlace, info, coords))]
+                properties[colour] = [Property(Place(typeOfPlace, info, coords))]
 
         elif typeOfPlace in ["station", "utility"]:
             info = place[1:3]

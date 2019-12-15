@@ -10,10 +10,22 @@ class Game:
         self.board = board
         self.player1 = player1
         self.player2 = player2
-        self.player1.label = tkinter.Label(self.parent, width=2, height=1, text=str(
-            self.player1.number), bg=self.player1.colour, fg="white")
-        self.player2.label = tkinter.Label(self.parent, width=2, height=1, text=str(
-            self.player2.number), bg=self.player2.colour, fg="white")
+        self.player1.label = tkinter.Label(
+            self.parent,
+            width=2,
+            height=1,
+            text=str(self.player1.number),
+            bg=self.player1.colour,
+            fg="white",
+        )
+        self.player2.label = tkinter.Label(
+            self.parent,
+            width=2,
+            height=1,
+            text=str(self.player2.number),
+            bg=self.player2.colour,
+            fg="white",
+        )
         self.currentPlayer = self.player1
         self.die1 = "..."
         self.die2 = "..."
@@ -26,8 +38,7 @@ class Game:
         self.board.displayPlayerInfo(self.player1)
         self.board.displayPlayerInfo(self.player2)
 
-        self.board.displayPlayerOptions(
-            self.currentPlayer, self.die1, self.die2, self)
+        self.board.displayPlayerOptions(self.currentPlayer, self.die1, self.die2, self)
 
         self.initialiseChances()
 
@@ -39,7 +50,8 @@ class Game:
         self.die1 = random.randint(1, 6)
         self.die2 = random.randint(1, 6)
         self.board.displayPlayerOptions(
-            self.currentPlayer, self.die1, self.die2, self)  # refresh dice display
+            self.currentPlayer, self.die1, self.die2, self
+        )  # refresh dice display
         self.board.flashDiceBox()
 
         # prevents the player from rolling again
@@ -51,7 +63,9 @@ class Game:
             self.currentPlayer.noOfDoubles = 0
         else:
             self.currentPlayer.noOfDoubles += 1
-            if self.currentPlayer.noOfDoubles == 3:  # if the player rolls three doubles in a row, they go to jail
+            if (
+                self.currentPlayer.noOfDoubles == 3
+            ):  # if the player rolls three doubles in a row, they go to jail
                 self.currentPlayer.inJail = True
                 self.popup("three doubles")
                 self.currentPlayer.position = 10
@@ -86,23 +100,24 @@ class Game:
         if current_place.type in ["property", "utility", "station"]:
             if current_place.type == "property":
                 self.board.updateInfo(
-                    "event", self.board.getProperty(current_place.getName()))
+                    "event", self.board.getProperty(current_place.getName())
+                )
             else:
                 self.board.updateInfo("event", current_place)
             if current_place.owner is None:  # if unowned, allow player to buy
                 self.board.buy_button.config(state="normal")
 
-            elif current_place.owner == self.getOtherPlayer():  # if place is owned by the other player
+            elif (
+                current_place.owner == self.getOtherPlayer()
+            ):  # if place is owned by the other player
                 # pay rent
                 self.popup("rent", current_place)
                 otherPlayer = self.getOtherPlayer()
                 if current_place.type == "property":
-                    rent = self.board.getProperty(
-                        current_place.getName()).getRent()
+                    rent = self.board.getProperty(current_place.getName()).getRent()
                 else:
                     rent = current_place.getRent(total)
-                self.currentPlayer.payRent(
-                    rent, otherPlayer)
+                self.currentPlayer.payRent(rent, otherPlayer)
                 # updates the other player's on-screen balance
                 self.board.displayPlayerInfo(self.getOtherPlayer())
 
@@ -207,8 +222,7 @@ class Game:
 
     def endTurn(self):
         self.currentPlayer = self.getOtherPlayer()
-        self.board.displayPlayerOptions(
-            self.currentPlayer, self.die1, self.die2, self)
+        self.board.displayPlayerOptions(self.currentPlayer, self.die1, self.die2, self)
         if not self.currentPlayer.inJail:
             self.board.roll_button.config(state="normal")
         else:
@@ -222,13 +236,19 @@ class Game:
 
         if self.currentPlayer.turnsInJail == 3:
             tkinter.messagebox.showinfo(
-                "Jail", "You have been in jail for 3 turns. Roll to move out of jail")
+                "Jail", "You have been in jail for 3 turns. Roll to move out of jail"
+            )
             self.currentPlayer.inJail = False
             self.currentPlayer.turnsInJail = 0
             self.board.updatePlayer(self.currentPlayer)
             self.board.roll_button.config(state="normal")
 
-        elif tkinter.messagebox.askquestion("You are in Jail", "Would you like to pay £50 to get out of jail?") == "yes":
+        elif (
+            tkinter.messagebox.askquestion(
+                "You are in Jail", "Would you like to pay £50 to get out of jail?"
+            )
+            == "yes"
+        ):
             self.currentPlayer.turnsInJail = 0
             self.currentPlayer.inJail = False
             self.currentPlayer.balance -= 50
@@ -240,14 +260,17 @@ class Game:
             self.die1 = random.randint(1, 6)
             self.die2 = random.randint(1, 6)
             self.board.displayPlayerOptions(
-                self.currentPlayer, self.die1, self.die2, self)  # refresh dice display
+                self.currentPlayer, self.die1, self.die2, self
+            )  # refresh dice display
             self.board.flashDiceBox()
 
             if self.die1 == self.die2:
                 self.currentPlayer.turnsInJail = 0
                 self.currentPlayer.inJail = False
                 tkinter.messagebox.showinfo(
-                    "Well done!", "You rolled a double so you are now out of jail!\nRoll to move")
+                    "Well done!",
+                    "You rolled a double so you are now out of jail!\nRoll to move",
+                )
                 self.board.updatePlayer(self.currentPlayer)
                 self.board.roll_button.config(state="normal")
 
@@ -292,27 +315,33 @@ class Game:
         if popup_type == "rent":
             current_place = info
             if current_place.type == "property":
-                rent = self.board.getProperty(
-                    current_place.getName()).getRent()
+                rent = self.board.getProperty(current_place.getName()).getRent()
             else:
-                rent = current_place.getRent(self.die1+self.die2)
-            tkinter.messagebox.showinfo("Pay Rent!", message="You have landed on {} which is owned by Player {}.\nYou have to pay £{}".format(
-                current_place.info[0], current_place.owner.number, rent))
+                rent = current_place.getRent(self.die1 + self.die2)
+            tkinter.messagebox.showinfo(
+                "Pay Rent!",
+                message="You have landed on {} which is owned by Player {}.\nYou have to pay £{}".format(
+                    current_place.info[0], current_place.owner.number, rent
+                ),
+            )
 
         elif popup_type == "tax":
             tkinter.messagebox.showinfo("Tax", message="Pay £{}".format(info))
 
         elif popup_type == "go":
             tkinter.messagebox.showinfo(
-                "GO", message="Collect £{} for passing GO!".format(info))
+                "GO", message="Collect £{} for passing GO!".format(info)
+            )
 
         elif popup_type == "double":
             tkinter.messagebox.showinfo(
-                "Double", message="You have rolled a double so you get one more roll!")
+                "Double", message="You have rolled a double so you get one more roll!"
+            )
 
         elif popup_type == "three doubles":
             tkinter.messagebox.showwarning(
-                "Jail", message="You rolled 3 doubles in a row. Go to jail!")
+                "Jail", message="You rolled 3 doubles in a row. Go to jail!"
+            )
             info = (self.currentPlayer.inJail, self.currentPlayer.turnsInJail)
             self.board.updateInfo("event", self.board.getPlace("Jail"), info)
 
@@ -326,7 +355,9 @@ class Game:
             self.board.roll_button.config(state="disabled")
             self.board.end_turn.config(state="disabled")
             tkinter.messagebox.showwarning(
-                "Bankrupt!", "Your balance has gone below £0! Some properties will be automatically sold.")
+                "Bankrupt!",
+                "Your balance has gone below £0! Some properties will be automatically sold.",
+            )
 
             # if the player is in debt, the player's utilities are automatically sold to make some money
             sold_properties = []
@@ -353,25 +384,38 @@ class Game:
                 for _ in range(len(properties)):
                     if self.currentPlayer.balance > 0:
                         break
-                    prop = self.board.getPlace(
-                        properties[-1].getName())
+                    prop = self.board.getPlace(properties[-1].getName())
                     self.sellProperty(prop)
                     sold_properties.append(prop.getName())
 
             # if properties were sold:
             if sold_properties:
                 tkinter.messagebox.showinfo(
-                    "Bankrupt", "The following properties were automatically sold:\n{}".format(", ".join(sold_properties)))
+                    "Bankrupt",
+                    "The following properties were automatically sold:\n{}".format(
+                        ", ".join(sold_properties)
+                    ),
+                )
             else:
                 tkinter.messagebox.showinfo(
-                    "Bankrupt", "Player {} has no properties to sell!".format(self.currentPlayer.number))
+                    "Bankrupt",
+                    "Player {} has no properties to sell!".format(
+                        self.currentPlayer.number
+                    ),
+                )
 
             # if the player's balance is still less than 0, the game is over
             if self.currentPlayer.balance <= 0:
                 tkinter.messagebox.showwarning(
-                    "Game Over!", "Player {} has gone bankrupt!".format(self.currentPlayer.number))
-                tkinter.messagebox.showinfo("Player {} Wins!".format(self.getOtherPlayer(
-                ).number), "Well done Player {}! You win!".format(self.getOtherPlayer().number))
+                    "Game Over!",
+                    "Player {} has gone bankrupt!".format(self.currentPlayer.number),
+                )
+                tkinter.messagebox.showinfo(
+                    "Player {} Wins!".format(self.getOtherPlayer().number),
+                    "Well done Player {}! You win!".format(
+                        self.getOtherPlayer().number
+                    ),
+                )
                 self.endGame()
             else:
                 self.board.end_turn.config(state="normal")
